@@ -22,13 +22,16 @@ class Options {
   static readonly SCISSORS = new Option("Scissors", 3);
 }
 
-const Mappings = new Map<string, Option>([
+const OptionMap = new Map<string, Option>([
   ["A", Options.ROCK],
   ["B", Options.PAPER],
   ["C", Options.SCISSORS],
-  ["X", Options.ROCK],
-  ["Y", Options.PAPER],
-  ["Z", Options.SCISSORS],
+]);
+
+const OutcomeMap = new Map<string, number>([
+  ["X", Outcomes.LOSE],
+  ["Y", Outcomes.DRAW],
+  ["Z", Outcomes.WIN],
 ]);
 
 function getPairs() {
@@ -39,49 +42,50 @@ function getPairs() {
   return pairs;
 }
 
-function mapPairToOptions(pair: string): Option[] {
+function mapPair(pair: string): { oppOption: Option; outcome: number } {
   const parts: string[] = pair.split(" ");
-  return parts
-    .map((part) => Mappings.get(part) || new Option("default", 0))
-    .filter((option) => option.name !== "default");
+  const oppOption = OptionMap.get(parts[0]) || new Option("default", 0);
+  const outcome = OutcomeMap.get(parts[1]) || 0;
+  return { oppOption, outcome };
 }
 
-function calculateScore(optionsPair: Option[]): number {
-  const outcomeScore: number = calculateOutcomeScore(optionsPair);
-  return outcomeScore + optionsPair[1].score;
+function calculateScore(mappedPair: {
+  oppOption: Option;
+  outcome: number;
+}): number {
+  const { oppOption, outcome } = mappedPair;
+  return outcome + getPlayerOption(outcome, oppOption).score;
 }
 
-function calculateOutcomeScore(optionsPair: Option[]) {
-  if (optionsPair[0] === optionsPair[1]) {
-    return Outcomes.DRAW;
-  }
-
-  if (optionsPair[0] === Options.ROCK) {
-    if (optionsPair[1] === Options.PAPER) {
-      return Outcomes.WIN;
+function getPlayerOption(outcome: number, oppOption: Option): Option {
+  if (outcome === Outcomes.DRAW) {
+    return oppOption;
+  } else if (outcome === Outcomes.WIN) {
+    if (oppOption === Options.ROCK) {
+      return Options.PAPER;
+    } else if (oppOption === Options.PAPER) {
+      return Options.SCISSORS;
     } else {
-      return Outcomes.LOSE;
-    }
-  } else if (optionsPair[0] === Options.PAPER) {
-    if (optionsPair[1] === Options.ROCK) {
-      return Outcomes.LOSE;
-    } else {
-      return Outcomes.WIN;
+      return Options.ROCK;
     }
   } else {
-    if (optionsPair[1] === Options.ROCK) {
-      return Outcomes.WIN;
+    if (oppOption === Options.ROCK) {
+      return Options.SCISSORS;
+    } else if (oppOption === Options.PAPER) {
+      return Options.ROCK;
     } else {
-      return Outcomes.LOSE;
+      return Options.PAPER;
     }
   }
 }
 
 function main() {
   const pairs: string[] = getPairs();
-  const optionPairs: Option[][] = pairs.map((pair) => mapPairToOptions(pair));
-  const allScores: number[] = optionPairs.map((optionPair) =>
-    calculateScore(optionPair)
+  const mappedPairs: Array<{ oppOption: Option; outcome: number }> = pairs.map(
+    (pair) => mapPair(pair)
+  );
+  const allScores: number[] = mappedPairs.map((mappedPair) =>
+    calculateScore(mappedPair)
   );
   console.log(
     "Total Score: " + allScores.reduce((acc, current) => acc + current)
