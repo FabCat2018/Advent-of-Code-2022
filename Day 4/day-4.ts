@@ -27,6 +27,14 @@ function containsSubset(ranges: number[][]): boolean {
   );
 }
 
+function containsOverlap(ranges: number[][]): boolean {
+  const [first, second] = ranges;
+  return (
+    first.some((item) => second.includes(item)) ||
+    second.some((item) => first.includes(item))
+  );
+}
+
 function main() {
   const pairs: string[] = getPairs();
   const elfAreas: string[][] = pairs.map((pair) => pair.split(","));
@@ -34,7 +42,9 @@ function main() {
     area.map((range) => convertToNumberRange(range))
   );
   const allSubsets = ranges.filter((pair) => containsSubset(pair));
+  const allOverlaps = ranges.filter((pair) => containsOverlap(pair));
   console.log("Total Subsets: ", allSubsets.length);
+  console.log("Total Overlaps: ", allOverlaps.length);
 }
 
 main();
